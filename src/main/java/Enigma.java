@@ -1,26 +1,46 @@
-import scale.InputOutputScale;
-import scale.ReflectorScale;
-import rotor.CenterRotor;
-import rotor.LeftRotor;
-import rotor.RightRotor;
+import rotor.Rotor;
+import lookup.LookupInputOutput;
+import lookup.LookupReflector;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class Enigma {
 
-    public static RightRotor rightRotor = new RightRotor("K");
-    static CenterRotor centerRotor = new CenterRotor("C");
-    static LeftRotor leftRotor = new LeftRotor("M");
+    private static final String RIGHT_INITIAL_LETTER = "K";
+    private static final String RIGHT_ARROW_LETTER = "V";
+    private static final String RIGHT_ROTOR_LABEL = "Right rotor";
+    private static final List<String> RIGHT_ROTOR_VALUES = Arrays.asList("B", "D", "F", "H", "J", "L",
+            "C", "P", "R", "T", "X", "V", "Z", "N", "Y", "E", "I", "W", "G", "A", "K", "M", "U", "S", "Q", "O");
 
-    static InputOutputScale inputOutputScale = new InputOutputScale();
-    static ReflectorScale reflectorScale = new ReflectorScale();
+    private static final String CENTER_INITIAL_LETTER = "C";
+    private static final String CENTER_ARROW_LETTER = "E";
+    private static final String CENTER_ROTOR_LABEL = "Center rotor";
+    private static final List<String> CENTER_ROTOR_VALUES = Arrays.asList("A", "J", "D", "K", "S", "I",
+            "R", "U", "X", "B", "L", "H", "W", "T", "M", "C", "Q", "G", "Z", "N", "P", "Y", "F", "V", "O", "E");
 
-    public static String encryptLetterFirst(String inputLetter) {
+    private static final String LEFT_INITIAL_LETTER = "M";
+    private static final String LEFT_ARROW_LETTER = "Q";
+    private static final String LEFT_ROTOR_LABEL = "Left rotor";
+    private static final List<String> LEFT_ROTOR_VALUES = Arrays.asList("E", "K", "M", "F", "L", "G",
+            "D", "Q", "V", "Z", "N", "T", "O", "W", "Y", "H", "X", "U", "S", "P", "A", "I", "B", "R", "C", "J");
 
-        if (inputLetter.trim().isEmpty()) {
-            return inputLetter;
-        }
+    private LookupInputOutput lookupInputOutput = new LookupInputOutput();
+    private LookupReflector lookupReflector = new LookupReflector();
 
+    private Rotor rightRotor;
+    private Rotor centerRotor;
+    private Rotor leftRotor;
+
+    private void initEnigma() {
+        System.out.println("\n* ( Initializing enigma before encryption... )");
+        rightRotor = new Rotor(RIGHT_ROTOR_VALUES, RIGHT_INITIAL_LETTER, RIGHT_ARROW_LETTER, RIGHT_ROTOR_LABEL);
+        centerRotor = new Rotor(CENTER_ROTOR_VALUES, CENTER_INITIAL_LETTER, CENTER_ARROW_LETTER, CENTER_ROTOR_LABEL);
+        leftRotor = new Rotor(LEFT_ROTOR_VALUES, LEFT_INITIAL_LETTER, LEFT_ARROW_LETTER, LEFT_ROTOR_LABEL);
+    }
+
+    private void manageRotorsRotations() {
         if (rightRotor.getCurrentRow().getArrowMarkedRow()) {
             System.out.println("\n* ( Rotating the center rotor because of notch on the right rotor )");
             centerRotor.rotateUp();
@@ -34,33 +54,43 @@ public class Enigma {
 
         System.out.println("\n* ( Rotating the right rotor before beginning )");
         rightRotor.rotateUp();
+    }
 
-        int firstTransitionPosition = inputOutputScale.getNumberForLetter(inputLetter);
-        int secondTransitionPosition = rightRotor.getOutputNumber(firstTransitionPosition);
-        int thirdTransitionPosition = centerRotor.getOutputNumber(secondTransitionPosition);
-        int fourthTransitionPosition = leftRotor.getOutputNumber(thirdTransitionPosition);
+    private String encryptLetter(int inputLetter) {
 
-        int reflectedNumber = reflectorScale.getReflectedRowNumber(fourthTransitionPosition);
+        String plainLetter = String.valueOf( (char)inputLetter );
 
-        fourthTransitionPosition = leftRotor.getOutputNumberReverse(reflectedNumber);
-        thirdTransitionPosition = centerRotor.getOutputNumberReverse(fourthTransitionPosition);
-        secondTransitionPosition = rightRotor.getOutputNumberReverse(thirdTransitionPosition);
+        if (plainLetter.trim().isEmpty()) {
+            return plainLetter;
+        }
 
-        String encryptedLetter = inputOutputScale.getLetterForNumber(secondTransitionPosition);
+        manageRotorsRotations();
+
+        String encryptedLetter = lookupInputOutput.getLetterForNumber(
+                                    rightRotor.getOutputNumberReverse(
+                                        centerRotor.getOutputNumberReverse(
+                                            leftRotor.getOutputNumberReverse(
+                                                lookupReflector.getReflectedRowNumber(
+                                            leftRotor.getOutputNumber(
+                                        centerRotor.getOutputNumber(
+                                    rightRotor.getOutputNumber(
+                                 lookupInputOutput.getNumberForLetter(plainLetter)))))))));
 
         return encryptedLetter;
     }
 
-    public static String encryptText(String inputText) {
+    public String encryptText(String inputText) {
+        // always initialize before encrypting
+        initEnigma();
         return inputText.chars()
-                        .mapToObj(x -> encryptLetterFirst(String.valueOf((char) x)))
-                        .collect(Collectors.toList())
-                        .stream()
+                        .mapToObj(this::encryptLetter)
                         .collect(Collectors.joining(""));
     }
 
     public static void main(String[] args) {
-        System.out.println("\n\nEncrypted string is : " + encryptText("QMJIDO MZWZJFJR"));
+        Enigma enigma = new Enigma();
+        System.out.println("\n\nEncrypted string is : " + enigma.encryptText("QMJIDO MZWZJFJR"));
+        System.out.println("\n\nEncrypted string is : " + enigma.encryptText("QMJIDO PQDPSRJLCV"));
     }
 
 }

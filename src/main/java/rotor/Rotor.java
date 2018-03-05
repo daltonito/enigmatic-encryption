@@ -1,4 +1,4 @@
-package rotor.core;
+package rotor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,15 +9,13 @@ import java.util.stream.IntStream;
 
 public class Rotor {
 
-    static List<String> leftInitValues = Arrays.asList("A", "B", "C", "D", "E", "F",
+    private static List<String> leftInitValues = Arrays.asList("A", "B", "C", "D", "E", "F",
             "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z");
 
     private List<RotorRow> rotorRows;
     protected String rotorLabel;
 
-    public Rotor() {}
-
-    public Rotor(List<String> rightInitValues, String arrowLetter, String label) {
+    public Rotor(List<String> rightInitValues, String initialLetter, String arrowLetter, String label) {
         rotorLabel = label;
         rotorRows = new ArrayList<>();
 
@@ -27,6 +25,8 @@ public class Rotor {
                     row.setArrowMarkedRow(leftInitValues.get(i).equals(arrowLetter));
                     rotorRows.add(row);
                  });
+
+        setInitialLetter(initialLetter);
     }
 
     public String rotateUp() {
@@ -44,7 +44,7 @@ public class Rotor {
         return result;
     }
 
-    public void setInitialLetter(String offsetLetter) {
+    private void setInitialLetter(String offsetLetter) {
         while (!rotateUp().equals(offsetLetter));
     }
 

@@ -1,11 +1,11 @@
-package scale.core;
+package lookup;
 
-public class ScaleRow {
+public class LookupRow {
 
     private int position;
     private String value;
 
-    public ScaleRow(int position, String value) {
+    public LookupRow(int position, String value) {
         this.position = position;
         this.value = value;
     }

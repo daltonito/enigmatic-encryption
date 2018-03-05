@@ -1,4 +1,4 @@
-package rotor.core;
+package rotor;
 
 public class RotorRow {
 
